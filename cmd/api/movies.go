@@ -5,12 +5,25 @@ import (
 	"net/http"
 	"time"
 
-	"greenlight.paulcockrell.net/internal/data"
+	"github.com/paulcockrell/greenlight/internal/data"
 )
 
 // Add a createMovieHandler for the "POST /v1/movies" endpoint
 func (app *application) createMovieHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "create a new movie")
+	var input struct {
+		Title   string       `json:"title"`
+		Genres  []string     `json:"genres"`
+		Year    int32        `json:"year"`
+		Runtime data.Runtime `json:"runtime"`
+	}
+
+	err := app.readJSON(w, r, &input)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	fmt.Fprintf(w, "%+v\n", input)
 }
 
 // Add a showMovieHandler for the "GET /v1/movies/:id" endpoint

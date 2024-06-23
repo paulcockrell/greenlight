@@ -1,4 +1,4 @@
-module greenlight.paulcockrell.net
+module github.com/paulcockrell/greenlight
 
 go 1.22.4
 
