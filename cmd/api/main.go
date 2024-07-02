@@ -11,6 +11,7 @@ import (
 	"time"
 
 	_ "github.com/lib/pq"
+	"github.com/paulcockrell/greenlight/internal/data"
 )
 
 const version = "1.0.0"
@@ -19,15 +20,16 @@ type config struct {
 	env string
 	db  struct {
 		dsn          string
+		maxIdleTime  string
 		maxOpenConns int
 		maxIdleConns int
-		maxIdleTime  string
 	}
 	port int
 }
 
 type application struct {
 	logger *log.Logger
+	models data.Models
 	config config
 }
 
@@ -59,13 +61,13 @@ func main() {
 	// Defer call to db.Close() so that the connection pool is close before the main()
 	// function exits
 	defer db.Close()
-
 	logger.Printf("database connection pool established")
 
 	// Declare an instance of the application struct
 	app := &application{
 		config: cfg,
 		logger: logger,
+		models: data.NewModels(db),
 	}
 
 	// Declare a HTTP server with some sensible timeout settings
