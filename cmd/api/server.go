@@ -24,6 +24,7 @@ func (app *application) serve() error {
 
 	shutdownError := make(chan error)
 
+	// background function to catch incoming SIGINT and SIGTERM signals
 	go func() {
 		quit := make(chan os.Signal, 1)
 		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
