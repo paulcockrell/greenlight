@@ -10,29 +10,38 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/paulcockrell/greenlight/internal/data"
 	"github.com/paulcockrell/greenlight/internal/jsonlog"
+	"github.com/paulcockrell/greenlight/internal/mailer"
 )
 
 const version = "1.0.0"
 
 type config struct {
-	env string
-	db  struct {
+	env  string
+	smtp struct {
+		host     string
+		username string
+		password string
+		sender   string
+		port     int
+	}
+	db struct {
 		dsn          string
 		maxIdleTime  string
 		maxOpenConns int
 		maxIdleConns int
 	}
-	port    int
 	limiter struct {
 		rps     float64
 		burst   int
 		enabled bool
 	}
+	port int
 }
 
 type application struct {
-	logger *jsonlog.Logger
 	models data.Models
+	logger *jsonlog.Logger
+	mailer mailer.Mailer
 	config config
 }
 
@@ -55,6 +64,12 @@ func main() {
 	flag.IntVar(&cfg.limiter.burst, "limiter-burst", 4, "Rate limiter maximum burst")
 	flag.BoolVar(&cfg.limiter.enabled, "limiter-enabled", true, "Enable rate limiter")
 
+	flag.StringVar(&cfg.smtp.host, "smtp-host", "smtp.mailtrap.io", "SMTP host")
+	flag.IntVar(&cfg.smtp.port, "smtp-port", 25, "SMTP port")
+	flag.StringVar(&cfg.smtp.username, "smtp-username", "ce58e18287850a", "SMTP username")
+	flag.StringVar(&cfg.smtp.password, "smtp-password", "40571e9f30ab0a", "SMTP password")
+	flag.StringVar(&cfg.smtp.sender, "smtp-sender", "Greenlight <no-reply@greenlight.paulcockrell.net>", "SMTP sender")
+
 	flag.Parse()
 
 	// Initialize a new logger
@@ -76,6 +91,7 @@ func main() {
 		config: cfg,
 		logger: logger,
 		models: data.NewModels(db),
+		mailer: mailer.New(cfg.smtp.host, cfg.smtp.port, cfg.smtp.username, cfg.smtp.password, cfg.smtp.sender),
 	}
 
 	err = app.serve()
