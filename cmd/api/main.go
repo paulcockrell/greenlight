@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"flag"
 	"os"
+	"sync"
 	"time"
 
 	_ "github.com/lib/pq"
@@ -43,6 +44,7 @@ type application struct {
 	logger *jsonlog.Logger
 	mailer mailer.Mailer
 	config config
+	wg     sync.WaitGroup
 }
 
 func main() {
